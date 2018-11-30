@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-
+from sklearn.linear_model import SGDClassifier
 
 def main():
     
@@ -23,12 +23,12 @@ def main():
     print(len(train_neg), "negative tweets loaded\n")
     fn.close()
     
-    num_samples = 3
+    num_samples = 3  # Half of the total number of tweets considered
     train_pos = train_pos[:num_samples]
     train_neg = train_neg[:num_samples]
     train = train_pos + train_neg
     
-    embs_pos, embs_neg = [], []
+    embs = []
     for i, tweet in enumerate(train):
         print(tweet)
         words = tweet.split()
@@ -42,13 +42,22 @@ def main():
         avg_emb = sum(np.array(embeds))/len(embeds)
         print(avg_emb, "\n\n")
         
-        if(i < num_samples):
-            embs_pos.append(avg_emb)
-        else:
-            embs_neg.append(avg_emb)
-
-    print("Positive embeddings:\n\n", embs_pos)
-    print("\nNegative embeddings:\n\n", embs_neg)
+        embs.append(avg_emb)
+    
+    
+    print("\nTraining...\n")
+    
+    clf = SGDClassifier(loss="hinge", penalty="l2", max_iter=5)
+    
+    X = embs
+    print(len(X))
+    y = np.ones(num_samples)
+    y = np.append(y, -y)
+    print(len(y))
+    clf.fit(X, y)
+    
+    print(clf.predict([embs[-1]]))  # Testing predictions
+    
             
 if __name__ == '__main__':
     main()
