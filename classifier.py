@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-from sklearn.linear_model import SGDClassifier
+from sklearn import svm
 
 def main():
     
@@ -23,7 +23,7 @@ def main():
     print(len(train_neg), "negative tweets loaded\n")
     fn.close()
     
-    num_samples = 3  # Half of the total number of tweets considered
+    num_samples = 1000  # Half of the total number of tweets considered
     train_pos = train_pos[:num_samples]
     train_neg = train_neg[:num_samples]
     train = train_pos + train_neg
@@ -35,8 +35,8 @@ def main():
         
         embeds = []
         for word in words:
-            v = vocab.get(word, 0)
-            if v != 0:
+            v = vocab.get(word, None)
+            if v != None:
                 embeds.append(embed[v])
         print(len(words), "words,", len(embeds), "embeds\n")
         avg_emb = sum(np.array(embeds))/len(embeds)
@@ -47,17 +47,38 @@ def main():
     
     print("\nTraining...\n")
     
-    clf = SGDClassifier(loss="hinge", penalty="l2", max_iter=5)
+    clf = svm.SVC(gamma=0.001, C=100.)
     
     X = embs
-    print(len(X))
     y = np.ones(num_samples)
     y = np.append(y, -y)
-    print(len(y))
     clf.fit(X, y)
     
-    print(clf.predict([embs[-1]]))  # Testing predictions
     
-            
+    print("\nTesting...\n")
+    
+    fp = open("twitter-datasets/test_data.txt", "r")
+    test_data = fp.readlines()
+    print(len(test_data), "test tweets loaded\n")
+    fp.close()
+    
+    for tweet in test_data[:10]:
+        i, t = tweet.split(",", maxsplit=1)  # Splitting the index from the tweet
+        print(t)
+        words = t.split()
+        
+        embeds = []
+        for word in words:
+            v = vocab.get(word, None)
+            if v != None:
+                embeds.append(embed[v])
+        print(len(words), "words,", len(embeds), "embeds\n")
+        avg_emb = sum(np.array(embeds))/len(embeds)
+        
+        print(i, " :", clf.predict([avg_emb]), "\n")
+    
+    
+    
+    
 if __name__ == '__main__':
     main()
