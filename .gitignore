@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+twitter-datasets/train_neg_full.txt
+twitter-datasets/train_pos_full.txt
+
 # Distribution / packaging
 .Python
 env/
