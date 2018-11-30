@@ -30,7 +30,7 @@ def main():
     
     embs_pos, embs_neg = [], []
     for i, tweet in enumerate(train):
-        print("~TWEET~:", tweet)
+        print(tweet)
         words = tweet.split()
         
         embeds = []
@@ -47,8 +47,8 @@ def main():
         else:
             embs_neg.append(avg_emb)
 
-    print("Positive embeddings:", embs_pos)
-    print("Negative embeddings:", embs_neg)
+    print("Positive embeddings:\n\n", embs_pos)
+    print("\nNegative embeddings:\n\n", embs_neg)
             
 if __name__ == '__main__':
     main()
