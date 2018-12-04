@@ -10,7 +10,8 @@ def calculate_avg_emb(tweet, vocab, embed):
         v = vocab.get(word, None)
         if v != None:
             embeds.append(embed[v])
-    return sum(np.array(embeds))/len(embeds)
+    avg_emb = sum(np.array(embeds))/len(embeds) if len(embeds) != 0 else []
+    return avg_emb
 
 
 def main():
@@ -42,7 +43,8 @@ def main():
     embs = []  # Will contain embeddings (average) for each tweet
     for tweet in train:
         avg_emb = calculate_avg_emb(tweet, vocab, embed)
-        embs.append(avg_emb)
+        if avg_emb != []:
+            embs.append(avg_emb)
     
     
     print("\nTraining...\n")
@@ -62,12 +64,12 @@ def main():
     print(len(test_data), "test tweets loaded\n")
     fp.close()
     
-    for tweet in test_data[:10]:
+    for tweet in test_data:
         i, t = tweet.split(",", maxsplit=1)  # Splitting the index from the tweet text
         avg_emb = calculate_avg_emb(t, vocab, embed)
-        
-        print(tweet, i, " :", clf.predict([avg_emb]), "\n")
-    
+        if avg_emb != []:
+            print(i, " :", clf.predict([avg_emb]), "\n")
+
     
 if __name__ == '__main__':
     main()
