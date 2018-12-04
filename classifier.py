@@ -2,6 +2,17 @@ import numpy as np
 import pickle
 from sklearn import svm
 
+
+def calculate_avg_emb(tweet, vocab, embed):
+    words = tweet.split()
+    embeds = []
+    for word in words:
+        v = vocab.get(word, None)
+        if v != None:
+            embeds.append(embed[v])
+    return sum(np.array(embeds))/len(embeds)
+
+
 def main():
     
     print("\nLoading embeddings...")
@@ -23,25 +34,14 @@ def main():
     print(len(train_neg), "negative tweets loaded\n")
     fn.close()
     
-    num_samples = 1000  # Half of the total number of tweets considered
-    train_pos = train_pos[:num_samples]
-    train_neg = train_neg[:num_samples]
+    half_num_samples = 1000  # Total number of tweets used
+    train_pos = train_pos[:half_num_samples]
+    train_neg = train_neg[:half_num_samples]
     train = train_pos + train_neg
     
-    embs = []
-    for i, tweet in enumerate(train):
-        print(tweet)
-        words = tweet.split()
-        
-        embeds = []
-        for word in words:
-            v = vocab.get(word, None)
-            if v != None:
-                embeds.append(embed[v])
-        print(len(words), "words,", len(embeds), "embeds\n")
-        avg_emb = sum(np.array(embeds))/len(embeds)
-        print(avg_emb, "\n\n")
-        
+    embs = []  # Will contain embeddings (average) for each tweet
+    for tweet in train:
+        avg_emb = calculate_avg_emb(tweet, vocab, embed)
         embs.append(avg_emb)
     
     
@@ -50,7 +50,7 @@ def main():
     clf = svm.SVC(gamma=0.001, C=100.)
     
     X = embs
-    y = np.ones(num_samples)
+    y = np.ones(half_num_samples)
     y = np.append(y, -y)
     clf.fit(X, y)
     
@@ -63,21 +63,10 @@ def main():
     fp.close()
     
     for tweet in test_data[:10]:
-        i, t = tweet.split(",", maxsplit=1)  # Splitting the index from the tweet
-        print(t)
-        words = t.split()
+        i, t = tweet.split(",", maxsplit=1)  # Splitting the index from the tweet text
+        avg_emb = calculate_avg_emb(t, vocab, embed)
         
-        embeds = []
-        for word in words:
-            v = vocab.get(word, None)
-            if v != None:
-                embeds.append(embed[v])
-        print(len(words), "words,", len(embeds), "embeds\n")
-        avg_emb = sum(np.array(embeds))/len(embeds)
-        
-        print(i, " :", clf.predict([avg_emb]), "\n")
-    
-    
+        print(tweet, i, " :", clf.predict([avg_emb]), "\n")
     
     
 if __name__ == '__main__':
