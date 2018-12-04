@@ -1,5 +1,7 @@
 import numpy as np
 import pickle
+import time
+import csv
 from sklearn import svm
 
 
@@ -52,8 +54,9 @@ def main():
     clf = svm.SVC(gamma=0.001, C=100.)
     
     X = embs
-    y = np.ones(half_num_samples)
+    y = np.ones(half_num_samples, dtype=int)
     y = np.append(y, -y)
+    print(y)
     clf.fit(X, y)
     
     
@@ -64,12 +67,21 @@ def main():
     print(len(test_data), "test tweets loaded\n")
     fp.close()
     
+    localtime = time.asctime(time.localtime(time.time()))
+    
+    fp = open("twitter-datasets/submission" + localtime + ".csv", "w")
+    fieldnames = ['Id', 'Prediction']
+    writer = csv.DictWriter(fp, fieldnames=fieldnames)
+    writer.writeheader()
+    
     for tweet in test_data:
         i, t = tweet.split(",", maxsplit=1)  # Splitting the index from the tweet text
         avg_emb = calculate_avg_emb(t, vocab, embed)
+        prediction = 1  # Default value for tweets we can't analyse
         if avg_emb != []:
-            print(i, " :", clf.predict([avg_emb]), "\n")
-
+            prediction = clf.predict([avg_emb])[0]
+        writer.writerow({'Id': str(i), 'Prediction': str(prediction)})
+    fp.close()
     
 if __name__ == '__main__':
     main()
