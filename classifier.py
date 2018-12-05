@@ -37,30 +37,32 @@ def main():
     print(len(train_neg), "negative tweets loaded\n")
     fn.close()
     
-    half_num_samples = 1000  # Total number of tweets used
-    train_pos = train_pos[:half_num_samples]
-    train_neg = train_neg[:half_num_samples]
-    train = train_pos + train_neg
-    
     embs = []  # Will contain embeddings (average) for each tweet
-    for tweet in train:
+    for tweet in train_pos:
+        avg_emb = calculate_avg_emb(tweet, vocab, embed)
+        if avg_emb != []:
+            embs.append(avg_emb)
+            
+    num_pos = len(embs)
+    
+    for tweet in train_neg:
         avg_emb = calculate_avg_emb(tweet, vocab, embed)
         if avg_emb != []:
             embs.append(avg_emb)
     
+    num_neg = len(embs) - num_pos
     
-    print("\nTraining...\n")
     
-    clf = svm.SVC(gamma=0.001, C=100.)
+    print("Training on", len(embs), "samples...\n")
+
+    clf = svm.SVC(gamma=0.001, C=100., verbose=1)
     
     X = embs
-    y = np.ones(half_num_samples, dtype=int)
-    y = np.append(y, -y)
-    print(y)
+    y = np.append(np.ones(num_pos, dtype=int),-np.ones(num_neg, dtype=int))
     clf.fit(X, y)
     
     
-    print("\nTesting...\n")
+    print("Testing...\n")
     
     fp = open("twitter-datasets/test_data.txt", "r")
     test_data = fp.readlines()
@@ -68,8 +70,7 @@ def main():
     fp.close()
     
     localtime = time.asctime(time.localtime(time.time()))
-    
-    fp = open("twitter-datasets/submission" + localtime + ".csv", "w")
+    fp = open("twitter-datasets/submission " + localtime + ".csv", "w")
     fieldnames = ['Id', 'Prediction']
     writer = csv.DictWriter(fp, fieldnames=fieldnames)
     writer.writeheader()
@@ -82,6 +83,8 @@ def main():
             prediction = clf.predict([avg_emb])[0]
         writer.writerow({'Id': str(i), 'Prediction': str(prediction)})
     fp.close()
+    
+    print("Done.")
     
 if __name__ == '__main__':
     main()
