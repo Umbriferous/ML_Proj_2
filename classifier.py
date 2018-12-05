@@ -20,8 +20,10 @@ def main():
     
     # Params
     
-    training_samples_per_class = 10000
-    testing_samples_per_class = 5000
+    training_samples_per_class = 5000
+    testing_samples_per_class = 10000
+    dataset_dir = "twitter-datasets/"  # directory for the dataset
+    out_dir = "out/"  # directory for submissions
     
     # Loading data
     
@@ -35,11 +37,11 @@ def main():
     print(len(vocab), "vocab lines loaded\n")
     
     print("Loading dataset...")
-    fp = open("twitter-datasets/train_pos_full.txt", "r")
+    fp = open(dataset_dir + "train_pos_full.txt", "r")
     tweets_pos = fp.readlines()
     print(len(tweets_pos), "positive tweets loaded")
     fp.close()
-    fn = open("twitter-datasets/train_neg_full.txt", "r")
+    fn = open(dataset_dir + "train_neg_full.txt", "r")
     tweets_neg = fn.readlines()
     print(len(tweets_neg), "negative tweets loaded\n")
     fn.close()
@@ -90,13 +92,13 @@ def main():
     
     print("\nLoading test_data.txt...\n")
     
-    fp = open("twitter-datasets/test_data.txt", "r")
+    fp = open(dataset_dir + "test_data.txt", "r")
     test_data = fp.readlines()
     print(len(test_data), "test tweets loaded\n")
     fp.close()
     
     localtime = time.asctime(time.localtime(time.time()))
-    fp = open("twitter-datasets/submission " + localtime[4:-5] + ".csv", "w")
+    fp = open(out_dir + "submission " + localtime[4:-5] + ".csv", "w")
     fieldnames = ['Id', 'Prediction']
     writer = csv.DictWriter(fp, fieldnames=fieldnames)
     writer.writeheader()
