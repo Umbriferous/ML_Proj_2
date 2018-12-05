@@ -18,6 +18,13 @@ def calculate_avg_emb(tweet, vocab, embed):
 
 def main():
     
+    # Params
+    
+    training_samples_per_class = 10000
+    testing_samples_per_class = 5000
+    
+    # Loading data
+    
     print("\nLoading embeddings...")
     embed = np.load('embeddings.npy')
     print(len(embed), "embeddings loaded\n")
@@ -28,30 +35,33 @@ def main():
     print(len(vocab), "vocab lines loaded\n")
     
     print("Loading dataset...")
-    fp = open("twitter-datasets/train_pos.txt", "r")
-    train_pos = fp.readlines()
-    print(len(train_pos), "positive tweets loaded")
+    fp = open("twitter-datasets/train_pos_full.txt", "r")
+    tweets_pos = fp.readlines()
+    print(len(tweets_pos), "positive tweets loaded")
     fp.close()
-    fn = open("twitter-datasets/train_neg.txt", "r")
-    train_neg = fn.readlines()
-    print(len(train_neg), "negative tweets loaded\n")
+    fn = open("twitter-datasets/train_neg_full.txt", "r")
+    tweets_neg = fn.readlines()
+    print(len(tweets_neg), "negative tweets loaded\n")
     fn.close()
     
-    embs = []  # Will contain embeddings (average) for each tweet
-    for tweet in train_pos:
+    # Generating embeddings for tweets
+    
+    embs = []
+    for tweet in tweets_pos[:training_samples_per_class]:
         avg_emb = calculate_avg_emb(tweet, vocab, embed)
         if avg_emb != []:
             embs.append(avg_emb)
             
     num_pos = len(embs)
     
-    for tweet in train_neg:
+    for tweet in tweets_neg[:training_samples_per_class]:
         avg_emb = calculate_avg_emb(tweet, vocab, embed)
         if avg_emb != []:
             embs.append(avg_emb)
     
     num_neg = len(embs) - num_pos
     
+    # Training the model
     
     print("Training on", len(embs), "samples...\n")
 
@@ -61,8 +71,24 @@ def main():
     y = np.append(np.ones(num_pos, dtype=int),-np.ones(num_neg, dtype=int))
     clf.fit(X, y)
     
+    # Testing (on unused samples)
     
-    print("Testing...\n")
+    test_data = tweets_pos[:testing_samples_per_class] + tweets_neg[:testing_samples_per_class]
+    correct_predictions = 0
+    for i, tweet in enumerate(test_data):
+        avg_emb = calculate_avg_emb(tweet, vocab, embed)
+        prediction = 1  # Default value for tweets we can't analyse
+        if avg_emb != []:
+            prediction = clf.predict([avg_emb])[0]
+        correct_answer = int(i < testing_samples_per_class) * 2 - 1
+        if prediction == correct_answer:
+            correct_predictions += 1
+    print("\n\nPredicted accuracy: " + str(correct_predictions/(2 * testing_samples_per_class)))
+    
+    
+    # Generating submission for test_data
+    
+    print("\nLoading test_data.txt...\n")
     
     fp = open("twitter-datasets/test_data.txt", "r")
     test_data = fp.readlines()
@@ -70,10 +96,12 @@ def main():
     fp.close()
     
     localtime = time.asctime(time.localtime(time.time()))
-    fp = open("twitter-datasets/submission " + localtime + ".csv", "w")
+    fp = open("twitter-datasets/submission " + localtime[4:-5] + ".csv", "w")
     fieldnames = ['Id', 'Prediction']
     writer = csv.DictWriter(fp, fieldnames=fieldnames)
     writer.writeheader()
+    
+    print("Generating predictions...\n")
     
     for tweet in test_data:
         i, t = tweet.split(",", maxsplit=1)  # Splitting the index from the tweet text
