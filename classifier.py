@@ -75,6 +75,7 @@ def main():
     
     # Testing (on unused samples)
     
+    print('\n\nTesting on unused samples...')
     test_data = tweets_pos[:testing_samples_per_class] + tweets_neg[:testing_samples_per_class]
     correct_predictions = 0
     for i, tweet in enumerate(test_data):
@@ -85,7 +86,7 @@ def main():
         correct_answer = int(i < testing_samples_per_class) * 2 - 1
         if prediction == correct_answer:
             correct_predictions += 1
-    print("\n\nPredicted accuracy: " + str(correct_predictions/(2 * testing_samples_per_class)))
+    print("\nPredicted accuracy: " + str(correct_predictions/(2 * testing_samples_per_class)))
     
     
     # Generating submission for test_data
@@ -97,7 +98,7 @@ def main():
     print(len(test_data), "test tweets loaded\n")
     fp.close()
     
-    localtime = time.asctime(time.localtime(time.time()))
+    localtime = time.asctime(time.localtime(time.time())).replace(':','.')
     fp = open(out_dir + "submission " + localtime[4:-5] + ".csv", "w")
     fieldnames = ['Id', 'Prediction']
     writer = csv.DictWriter(fp, fieldnames=fieldnames)
